@@ -3,7 +3,8 @@
  * Utility functions for initializing AI clients in MCP context
  */
 
-import { Anthropic } from '@anthropic-ai/sdk';
+import { AnthropicVertex as Anthropic } from '@anthropic-ai/vertex-sdk';
+
 import dotenv from 'dotenv';
 
 // Load environment variables for CLI mode
@@ -37,7 +38,9 @@ export function getAnthropicClientForMCP(session, log = console) {
 
 		// Initialize and return a new Anthropic client
 		return new Anthropic({
-			apiKey,
+			// apiKey,
+			projectId: 'fonos-audio',
+			region: 'us-east5',
 			defaultHeaders: {
 				'anthropic-beta': 'output-128k-2025-02-19' // Include header for increased token limit
 			}

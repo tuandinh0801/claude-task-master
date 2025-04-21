@@ -5,7 +5,9 @@
 
 // NOTE/TODO: Include the beta header output-128k-2025-02-19 in your API request to increase the maximum output token length to 128k tokens for Claude 3.7 Sonnet.
 
-import { Anthropic } from '@anthropic-ai/sdk';
+// import { Anthropic } from '@anthropic-ai/sdk';
+import { AnthropicVertex as Anthropic } from '@anthropic-ai/vertex-sdk';
+
 import OpenAI from 'openai';
 import dotenv from 'dotenv';
 import { CONFIG, log, sanitizePrompt, isSilentMode } from './utils.js';
@@ -17,8 +19,10 @@ dotenv.config();
 
 // Configure Anthropic client
 const anthropic = new Anthropic({
-	apiKey: process.env.ANTHROPIC_API_KEY,
+	// apiKey: process.env.ANTHROPIC_API_KEY,
 	// Add beta header for 128k token output
+	projectId: 'fonos-audio',
+	region: 'us-east5',
 	defaultHeaders: {
 		'anthropic-beta': 'output-128k-2025-02-19'
 	}
@@ -1298,7 +1302,9 @@ function getAnthropicClient(session) {
 	}
 
 	return new Anthropic({
-		apiKey: apiKey,
+		// apiKey: apiKey,
+		projectId: 'fonos-audio',
+		region: 'us-east5',
 		// Add beta header for 128k token output
 		defaultHeaders: {
 			'anthropic-beta': 'output-128k-2025-02-19'
@@ -1472,7 +1478,9 @@ function getConfiguredAnthropicClient(session = null, customEnv = null) {
 	}
 
 	return new Anthropic({
-		apiKey: apiKey,
+		// apiKey: apiKey,
+		projectId: 'fonos-audio',
+		region: 'us-east5',
 		// Add beta header for 128k token output
 		defaultHeaders: {
 			'anthropic-beta': 'output-128k-2025-02-19'

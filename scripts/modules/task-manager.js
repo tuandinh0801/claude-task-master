@@ -9,7 +9,8 @@ import chalk from 'chalk';
 import boxen from 'boxen';
 import Table from 'cli-table3';
 import readline from 'readline';
-import { Anthropic } from '@anthropic-ai/sdk';
+// import { Anthropic } from '@anthropic-ai/sdk';
+import { AnthropicVertex as Anthropic } from '@anthropic-ai/vertex-sdk';
 import ora from 'ora';
 import inquirer from 'inquirer';
 
@@ -60,7 +61,9 @@ import {
 
 // Initialize Anthropic client
 const anthropic = new Anthropic({
-	apiKey: process.env.ANTHROPIC_API_KEY
+	// apiKey: process.env.ANTHROPIC_API_KEY
+	projectId: 'fonos-audio',
+	region: 'us-east5',
 });
 
 // Import perplexity if available
