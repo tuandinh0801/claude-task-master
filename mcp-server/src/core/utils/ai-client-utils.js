@@ -3,7 +3,17 @@
  * Utility functions for initializing AI clients in MCP context
  */
 
-import { AnthropicVertex as Anthropic } from '@anthropic-ai/vertex-sdk';
+import { AnthropicVertex } from '@anthropic-ai/vertex-sdk';
+import { GoogleAuth } from "google-auth-library";
+import path from 'path'; // Import path module
+import { fileURLToPath } from 'url'; // Import url module
+
+// --- Calculate absolute path for credentials file ---
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const credentialsPath = path.resolve(__dirname, '../../../../', 'vertex-credentials.json');
+// ---
+
 
 import dotenv from 'dotenv';
 
@@ -12,7 +22,7 @@ dotenv.config();
 
 // Default model configuration from CLI environment
 const DEFAULT_MODEL_CONFIG = {
-	model: 'claude-3-7-sonnet-20250219',
+	model: 'claude-3-7-sonnet@20250219',
 	maxTokens: 64000,
 	temperature: 0.2
 };
@@ -26,29 +36,25 @@ const DEFAULT_MODEL_CONFIG = {
  */
 export function getAnthropicClientForMCP(session, log = console) {
 	try {
-		// Extract API key from session.env or fall back to environment variables
-		const apiKey =
-			session?.env?.ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY;
-
-		if (!apiKey) {
-			throw new Error(
-				'ANTHROPIC_API_KEY not found in session environment or process.env'
-			);
-		}
 
 		// Initialize and return a new Anthropic client
-		return new Anthropic({
+		return new AnthropicVertex({
 			// apiKey,
 			projectId: 'fonos-audio',
 			region: 'us-east5',
 			defaultHeaders: {
 				'anthropic-beta': 'output-128k-2025-02-19' // Include header for increased token limit
-			}
+			},
+			googleAuth: new GoogleAuth({
+				scopes: ["https://www.googleapis.com/auth/cloud-platform"],
+				keyFile: credentialsPath
+			}),
 		});
 	} catch (error) {
 		log.error(`Failed to initialize Anthropic client: ${error.message}`);
 		throw error;
 	}
+
 }
 
 /**

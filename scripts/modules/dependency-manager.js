@@ -6,8 +6,6 @@
 import path from 'path';
 import chalk from 'chalk';
 import boxen from 'boxen';
-// import { Anthropic } from '@anthropic-ai/sdk';
-import { AnthropicVertex as Anthropic } from '@anthropic-ai/vertex-sdk';
 
 import {
 	log,
@@ -22,13 +20,6 @@ import {
 import { displayBanner } from './ui.js';
 
 import { generateTaskFiles } from './task-manager.js';
-
-// Initialize Anthropic client
-const anthropic = new Anthropic({
-	// apiKey: process.env.ANTHROPIC_API_KEY,
-	projectId: 'fonos-audio',
-	region: 'us-east5',
-});
 
 /**
  * Add a dependency to a task

@@ -5,28 +5,44 @@
 
 // NOTE/TODO: Include the beta header output-128k-2025-02-19 in your API request to increase the maximum output token length to 128k tokens for Claude 3.7 Sonnet.
 
-// import { Anthropic } from '@anthropic-ai/sdk';
-import { AnthropicVertex as Anthropic } from '@anthropic-ai/vertex-sdk';
+import { AnthropicVertex } from '@anthropic-ai/vertex-sdk';
+import { GoogleAuth } from "google-auth-library"
 
 import OpenAI from 'openai';
 import dotenv from 'dotenv';
+import path from 'path'; // Import path module
+import { fileURLToPath } from 'url'; // Import url module
 import { CONFIG, log, sanitizePrompt, isSilentMode } from './utils.js';
 import { startLoadingIndicator, stopLoadingIndicator } from './ui.js';
 import chalk from 'chalk';
 
+// --- Calculate absolute path for credentials file ---
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const credentialsPath = path.resolve(__dirname, '../../', 'vertex-credentials.json');
+// ---
+
 // Load environment variables
 dotenv.config();
 
+
+
 // Configure Anthropic client
-const anthropic = new Anthropic({
+const anthropic = new AnthropicVertex({
 	// apiKey: process.env.ANTHROPIC_API_KEY,
 	// Add beta header for 128k token output
 	projectId: 'fonos-audio',
 	region: 'us-east5',
 	defaultHeaders: {
 		'anthropic-beta': 'output-128k-2025-02-19'
-	}
+	},
+	// Use keyFilename with absolute path
+	googleAuth: new GoogleAuth({
+		scopes: ["https://www.googleapis.com/auth/cloud-platform"],
+		keyFile: credentialsPath // Use calculated absolute path
+	}),
 });
+
 
 // Lazy-loaded Perplexity client
 let perplexity = null;
@@ -324,9 +340,10 @@ async function handleStreamingRequest(
 
 	// Only show loading indicators for text output (CLI)
 	let loadingIndicator = null;
-	if (outputFormat === 'text' && !isSilentMode()) {
-		loadingIndicator = startLoadingIndicator('Generating tasks from PRD...');
-	}
+	// Disable ora loading indicator
+	// if (outputFormat === 'text' && !isSilentMode()) {
+	// 	loadingIndicator = startLoadingIndicator('Generating tasks from PRD...');
+	// }
 
 	if (reportProgress) {
 		await reportProgress({ progress: 0 });
@@ -355,18 +372,18 @@ async function handleStreamingRequest(
 			stream: true
 		});
 
-		// Update loading indicator to show streaming progress - only for text output
-		if (outputFormat === 'text' && !isSilentMode()) {
-			let dotCount = 0;
-			const readline = await import('readline');
-			streamingInterval = setInterval(() => {
-				readline.cursorTo(process.stdout, 0);
-				process.stdout.write(
-					`Receiving streaming response from Claude${'.'.repeat(dotCount)}`
-				);
-				dotCount = (dotCount + 1) % 4;
-			}, 500);
-		}
+		// Disable streaming progress dots
+		// if (outputFormat === 'text' && !isSilentMode()) {
+		// 	let dotCount = 0;
+		// 	const readline = await import('readline');
+		// 	streamingInterval = setInterval(() => {
+		// 		readline.cursorTo(process.stdout, 0);
+		// 		process.stdout.write(
+		// 			`Receiving streaming response from Claude${'.'.repeat(dotCount)}`
+		// 		);
+		// 		dotCount = (dotCount + 1) % 4;
+		// 	}, 500);
+		// }
 
 		// Process the stream
 		for await (const chunk of stream) {
@@ -385,10 +402,10 @@ async function handleStreamingRequest(
 
 		if (streamingInterval) clearInterval(streamingInterval);
 
-		// Only call stopLoadingIndicator if we started one
-		if (loadingIndicator && outputFormat === 'text' && !isSilentMode()) {
-			stopLoadingIndicator(loadingIndicator);
-		}
+		// Disable ora loading indicator stop
+		// if (loadingIndicator && outputFormat === 'text' && !isSilentMode()) {
+		// 	stopLoadingIndicator(loadingIndicator);
+		// }
 
 		report(
 			`Completed streaming response from ${aiClient ? 'provided' : 'default'} AI client!`,
@@ -407,10 +424,10 @@ async function handleStreamingRequest(
 	} catch (error) {
 		if (streamingInterval) clearInterval(streamingInterval);
 
-		// Only call stopLoadingIndicator if we started one
-		if (loadingIndicator && outputFormat === 'text' && !isSilentMode()) {
-			stopLoadingIndicator(loadingIndicator);
-		}
+		// Disable ora loading indicator stop
+		// if (loadingIndicator && outputFormat === 'text' && !isSilentMode()) {
+		// 	stopLoadingIndicator(loadingIndicator);
+		// }
 
 		// Get user-friendly error message
 		const userMessage = handleClaudeError(error);
@@ -562,7 +579,15 @@ async function generateSubtasks(
 		let streamingInterval = null;
 		let responseText = '';
 
-		const systemPrompt = `You are an AI assistant helping with task breakdown for software development. 
+		// Disable ora loading indicator
+		// const loadingIndicator = startLoadingIndicator(
+		// 	`Generating subtasks for task ${task.id}...`
+		// );
+		// let streamingInterval = null;
+		// let responseText = '';
+
+
+		const systemPrompt = `You are an AI assistant helping with task breakdown for software development.
 You need to break down a high-level task into ${numSubtasks} specific subtasks that can be implemented one by one.
 
 Subtasks should:
@@ -608,16 +633,16 @@ Return exactly ${numSubtasks} subtasks with the following JSON structure:
 Note on dependencies: Subtasks can depend on other subtasks with lower IDs. Use an empty array if there are no dependencies.`;
 
 		try {
-			// Update loading indicator to show streaming progress
-			let dotCount = 0;
-			const readline = await import('readline');
-			streamingInterval = setInterval(() => {
-				readline.cursorTo(process.stdout, 0);
-				process.stdout.write(
-					`Generating subtasks for task ${task.id}${'.'.repeat(dotCount)}`
-				);
-				dotCount = (dotCount + 1) % 4;
-			}, 500);
+			// Disable streaming progress dots
+			// let dotCount = 0;
+			// const readline = await import('readline');
+			// streamingInterval = setInterval(() => {
+			// 	readline.cursorTo(process.stdout, 0);
+			// 	process.stdout.write(
+			// 		`Generating subtasks for task ${task.id}${'.'.repeat(dotCount)}`
+			// 	);
+			// 	dotCount = (dotCount + 1) % 4;
+			// }, 500);
 
 			// TODO: MOVE THIS TO THE STREAM REQUEST FUNCTION (DRY)
 
@@ -654,7 +679,8 @@ Note on dependencies: Subtasks can depend on other subtasks with lower IDs. Use 
 			}
 
 			if (streamingInterval) clearInterval(streamingInterval);
-			stopLoadingIndicator(loadingIndicator);
+			// Disable ora loading indicator stop
+			// stopLoadingIndicator(loadingIndicator);
 
 			log('info', `Completed generating subtasks for task ${task.id}`);
 
@@ -666,7 +692,8 @@ Note on dependencies: Subtasks can depend on other subtasks with lower IDs. Use 
 			);
 		} catch (error) {
 			if (streamingInterval) clearInterval(streamingInterval);
-			stopLoadingIndicator(loadingIndicator);
+			// Disable ora loading indicator stop
+			// stopLoadingIndicator(loadingIndicator);
 			throw error;
 		}
 	} catch (error) {
@@ -714,13 +741,13 @@ async function generateSubtasksWithPerplexity(
 			session?.env?.PERPLEXITY_MODEL ||
 			'sonar-pro';
 
-		// Only create loading indicators if not in silent mode
+		// Disable ora loading indicator
 		let researchLoadingIndicator = null;
-		if (!isSilent) {
-			researchLoadingIndicator = startLoadingIndicator(
-				'Researching best practices with Perplexity AI...'
-			);
-		}
+		// if (!isSilent) {
+		// 	researchLoadingIndicator = startLoadingIndicator(
+		// 		'Researching best practices with Perplexity AI...'
+		// 	);
+		// }
 
 		// Formulate research query based on task
 		const researchQuery = `I need to implement "${task.title}" which involves: "${task.description}". 
@@ -741,10 +768,10 @@ Include concrete code examples and technical considerations where relevant.`;
 
 		const researchResult = researchResponse.choices[0].message.content;
 
-		// Only stop loading indicator if it was created
-		if (researchLoadingIndicator) {
-			stopLoadingIndicator(researchLoadingIndicator);
-		}
+		// Disable ora loading indicator stop
+		// if (researchLoadingIndicator) {
+		// 	stopLoadingIndicator(researchLoadingIndicator);
+		// }
 
 		logFn(
 			'info',
@@ -760,13 +787,13 @@ ADDITIONAL CONTEXT PROVIDED BY USER:
 ${additionalContext || 'No additional context provided.'}
 `;
 
-		// Now generate subtasks with Claude
+		// Disable ora loading indicator
 		let loadingIndicator = null;
-		if (!isSilent) {
-			loadingIndicator = startLoadingIndicator(
-				`Generating research-backed subtasks for task ${task.id}...`
-			);
-		}
+		// if (!isSilent) {
+		// 	loadingIndicator = startLoadingIndicator(
+		// 		`Generating research-backed subtasks for task ${task.id}...`
+		// 	);
+		// }
 
 		let streamingInterval = null;
 		let responseText = '';
@@ -818,18 +845,18 @@ Note on dependencies: Subtasks can depend on other subtasks with lower IDs. Use 
 
 		try {
 			// Update loading indicator to show streaming progress
-			// Only create if not in silent mode
-			if (!isSilent) {
-				let dotCount = 0;
-				const readline = await import('readline');
-				streamingInterval = setInterval(() => {
-					readline.cursorTo(process.stdout, 0);
-					process.stdout.write(
-						`Generating research-backed subtasks for task ${task.id}${'.'.repeat(dotCount)}`
-					);
-					dotCount = (dotCount + 1) % 4;
-				}, 500);
-			}
+			// Disable streaming progress dots
+			// if (!isSilent) {
+			// 	let dotCount = 0;
+			// 	const readline = await import('readline');
+			// 	streamingInterval = setInterval(() => {
+			// 		readline.cursorTo(process.stdout, 0);
+			// 		process.stdout.write(
+			// 			`Generating research-backed subtasks for task ${task.id}${'.'.repeat(dotCount)}`
+			// 		);
+			// 		dotCount = (dotCount + 1) % 4;
+			// 	}, 500);
+			// }
 
 			// Use streaming API call via our helper function
 			responseText = await _handleAnthropicStream(
@@ -851,10 +878,11 @@ Note on dependencies: Subtasks can depend on other subtasks with lower IDs. Use 
 				streamingInterval = null;
 			}
 
-			if (loadingIndicator) {
-				stopLoadingIndicator(loadingIndicator);
-				loadingIndicator = null;
-			}
+			// Disable ora loading indicator stop
+			// if (loadingIndicator) {
+			// 	stopLoadingIndicator(loadingIndicator);
+			// 	loadingIndicator = null;
+			// }
 
 			logFn(
 				'info',
@@ -873,9 +901,10 @@ Note on dependencies: Subtasks can depend on other subtasks with lower IDs. Use 
 				clearInterval(streamingInterval);
 			}
 
-			if (loadingIndicator) {
-				stopLoadingIndicator(loadingIndicator);
-			}
+			// Disable ora loading indicator stop
+			// if (loadingIndicator) {
+			// 	stopLoadingIndicator(loadingIndicator);
+			// }
 
 			throw error;
 		}
@@ -1051,11 +1080,12 @@ async function _handleAnthropicStream(
 	// Only show CLI indicators if in cliMode AND not in silent mode
 	const showCLIOutput = cliMode && !isSilent;
 
-	if (showCLIOutput) {
-		loadingIndicator = startLoadingIndicator(
-			'Processing request with Claude AI...'
-		);
-	}
+	// Disable ora loading indicator
+	// if (showCLIOutput) {
+	// 	loadingIndicator = startLoadingIndicator(
+	// 		'Processing request with Claude AI...'
+	// 	);
+	// }
 
 	try {
 		// Validate required parameters
@@ -1080,18 +1110,18 @@ async function _handleAnthropicStream(
 		// Call Anthropic with streaming enabled
 		const stream = await client.messages.create(streamParams);
 
-		// Set up streaming progress indicator for CLI (only if not in silent mode)
-		let dotCount = 0;
-		if (showCLIOutput) {
-			const readline = await import('readline');
-			streamingInterval = setInterval(() => {
-				readline.cursorTo(process.stdout, 0);
-				process.stdout.write(
-					`Receiving streaming response from Claude${'.'.repeat(dotCount)}`
-				);
-				dotCount = (dotCount + 1) % 4;
-			}, 500);
-		}
+		// Disable streaming progress dots
+		// let dotCount = 0;
+		// if (showCLIOutput) {
+		// 	const readline = await import('readline');
+		// 	streamingInterval = setInterval(() => {
+		// 		readline.cursorTo(process.stdout, 0);
+		// 		process.stdout.write(
+		// 			`Receiving streaming response from Claude${'.'.repeat(dotCount)}`
+		// 		);
+		// 		dotCount = (dotCount + 1) % 4;
+		// 	}, 500);
+		// }
 
 		// Process the stream
 		let streamIterator = stream[Symbol.asyncIterator]();
@@ -1160,10 +1190,11 @@ async function _handleAnthropicStream(
 			streamingInterval = null;
 		}
 
-		if (loadingIndicator) {
-			stopLoadingIndicator(loadingIndicator);
-			loadingIndicator = null;
-		}
+		// Disable ora loading indicator stop
+		// if (loadingIndicator) {
+		// 	stopLoadingIndicator(loadingIndicator);
+		// 	loadingIndicator = null;
+		// }
 
 		// Log completion
 		if (mcpLog) {
@@ -1180,10 +1211,11 @@ async function _handleAnthropicStream(
 			streamingInterval = null;
 		}
 
-		if (loadingIndicator) {
-			stopLoadingIndicator(loadingIndicator);
-			loadingIndicator = null;
-		}
+		// Disable ora loading indicator stop
+		// if (loadingIndicator) {
+		// 	stopLoadingIndicator(loadingIndicator);
+		// 	loadingIndicator = null;
+		// }
 
 		// Log the error
 		if (mcpLog) {
@@ -1301,14 +1333,18 @@ function getAnthropicClient(session) {
 		);
 	}
 
-	return new Anthropic({
-		// apiKey: apiKey,
+	return new AnthropicVertex({
+		// apiKey: process.env.ANTHROPIC_API_KEY, // API Key not used for Vertex
 		projectId: 'fonos-audio',
 		region: 'us-east5',
-		// Add beta header for 128k token output
 		defaultHeaders: {
 			'anthropic-beta': 'output-128k-2025-02-19'
-		}
+		},
+		// Use keyFilename with absolute path
+		googleAuth: new GoogleAuth({
+			scopes: ["https://www.googleapis.com/auth/cloud-platform"],
+			keyFilename: credentialsPath // Use calculated absolute path
+		}),
 	});
 }
 
@@ -1334,9 +1370,10 @@ async function generateTaskDescriptionWithPerplexity(
 			process.env.PERPLEXITY_MODEL ||
 			session?.env?.PERPLEXITY_MODEL ||
 			'sonar-pro';
-		const researchLoadingIndicator = startLoadingIndicator(
-			'Researching best practices with Perplexity AI...'
-		);
+		// Disable ora loading indicator
+		// const researchLoadingIndicator = startLoadingIndicator(
+		// 	'Researching best practices with Perplexity AI...'
+		// );
 
 		// Formulate research query based on task prompt
 		const researchQuery = `I need to implement: "${prompt}". 
@@ -1357,13 +1394,14 @@ Include concrete code examples and technical considerations where relevant.`;
 
 		const researchResult = researchResponse.choices[0].message.content;
 
-		stopLoadingIndicator(researchLoadingIndicator);
+		// Disable ora loading indicator stop
+		// stopLoadingIndicator(researchLoadingIndicator);
 		log('info', 'Research completed, now generating detailed task description');
 
-		// Now generate task description with Claude
-		const loadingIndicator = startLoadingIndicator(
-			`Generating research-backed task description...`
-		);
+		// Disable ora loading indicator
+		// const loadingIndicator = startLoadingIndicator(
+		// 	`Generating research-backed task description...`
+		// );
 		let streamingInterval = null;
 		let responseText = '';
 
@@ -1395,16 +1433,16 @@ Return a JSON object with the following structure:
 }`;
 
 		try {
-			// Update loading indicator to show streaming progress
-			let dotCount = 0;
-			const readline = await import('readline');
-			streamingInterval = setInterval(() => {
-				readline.cursorTo(process.stdout, 0);
-				process.stdout.write(
-					`Generating research-backed task description${'.'.repeat(dotCount)}`
-				);
-				dotCount = (dotCount + 1) % 4;
-			}, 500);
+			// Disable streaming progress dots
+			// let dotCount = 0;
+			// const readline = await import('readline');
+			// streamingInterval = setInterval(() => {
+			// 	readline.cursorTo(process.stdout, 0);
+			// 	process.stdout.write(
+			// 		`Generating research-backed task description${'.'.repeat(dotCount)}`
+			// 	);
+			// 	dotCount = (dotCount + 1) % 4;
+			// }, 500);
 
 			// Use streaming API call
 			const stream = await anthropic.messages.create({
@@ -1439,14 +1477,16 @@ Return a JSON object with the following structure:
 			}
 
 			if (streamingInterval) clearInterval(streamingInterval);
-			stopLoadingIndicator(loadingIndicator);
+			// Disable ora loading indicator stop
+			// stopLoadingIndicator(loadingIndicator);
 
 			log('info', `Completed generating research-backed task description`);
 
 			return parseTaskJsonResponse(responseText);
 		} catch (error) {
 			if (streamingInterval) clearInterval(streamingInterval);
-			stopLoadingIndicator(loadingIndicator);
+			// Disable ora loading indicator stop
+			// stopLoadingIndicator(loadingIndicator);
 			throw error;
 		}
 	} catch (error) {
@@ -1477,14 +1517,18 @@ function getConfiguredAnthropicClient(session = null, customEnv = null) {
 		);
 	}
 
-	return new Anthropic({
-		// apiKey: apiKey,
+	return new AnthropicVertex({
+		// apiKey: apiKey, // API Key not used for Vertex
 		projectId: 'fonos-audio',
 		region: 'us-east5',
-		// Add beta header for 128k token output
 		defaultHeaders: {
 			'anthropic-beta': 'output-128k-2025-02-19'
-		}
+		},
+		// Use keyFilename with absolute path
+		googleAuth: new GoogleAuth({
+			scopes: ["https://www.googleapis.com/auth/cloud-platform"],
+			keyFilename: credentialsPath // Use calculated absolute path
+		}),
 	});
 }
 

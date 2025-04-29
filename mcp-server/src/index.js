@@ -73,6 +73,11 @@ class TaskMasterMCPServer {
 		await this.server.start({
 			transportType: 'stdio',
 			timeout: 120000 // 2 minutes timeout (in milliseconds)
+			// transportType: "sse",
+			// sse: {
+			// 	endpoint: "/sse",
+			// 	port: 8080,
+			// },
 		});
 
 		return this;

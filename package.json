@@ -40,7 +40,8 @@
 	"license": "MIT WITH Commons-Clause",
 	"dependencies": {
 		"@anthropic-ai/sdk": "^0.39.0",
-    "@anthropic-ai/vertex-sdk": "^0.7.0",
+		"@anthropic-ai/vertex-sdk": "^0.7.0",
+		"@modelcontextprotocol/sdk": "^1.10.1",
 		"boxen": "^8.0.1",
 		"chalk": "^4.1.2",
 		"cli-table3": "^0.6.5",
@@ -48,7 +49,7 @@
 		"cors": "^2.8.5",
 		"dotenv": "^16.3.1",
 		"express": "^4.21.2",
-		"fastmcp": "^1.20.5",
+		"fastmcp": "^1.22.2",
 		"figlet": "^1.8.0",
 		"fuse.js": "^7.0.0",
 		"gradient-string": "^3.0.0",
@@ -58,7 +59,8 @@
 		"lru-cache": "^10.2.0",
 		"openai": "^4.89.0",
 		"ora": "^8.2.0",
-		"uuid": "^11.1.0"
+		"uuid": "^11.1.0",
+		"zod": "^3.0.0"
 	},
 	"engines": {
 		"node": ">=14.0.0"
@@ -94,6 +96,7 @@
 		"jest-environment-node": "^29.7.0",
 		"mock-fs": "^5.5.0",
 		"prettier": "^3.5.3",
-		"supertest": "^7.1.0"
+		"supertest": "^7.1.0",
+		"zod-to-json-schema": "^3.24.5"
 	}
 }
